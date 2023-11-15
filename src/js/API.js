@@ -4,7 +4,7 @@ export class PicApi {
   static BASE_URL = 'https://pixabay.com';
   static API = '40670268-b3ad9432c00754cff3407f78c';
   static END_POINT = '/api/';
-  static PER_PAGE = 20;
+  static PER_PAGE = 40;
   constructor() {
     this.q = '';
     this.page = 1;
