@@ -11,41 +11,40 @@ const refs = {
 
 let lightbox = null;
 const picApi = new PicApi();
+
 refs.formEl.addEventListener('submit', onFormElSubmit);
 refs.btnEl.addEventListener('click', onBtnElClick);
 refs.btnEl.classList.add('visually-hidden');
 
-function onBtnElClick() {
+async function onBtnElClick() {
   picApi.page++;
 
-  picApi
-    .fetchPics()
-    .then(res => {
-      if (res.hits.length === 0) {
-        refs.btnEl.classList.add('visually-hidden');
-        throw "We're sorry, but you've reached the end of search results.";
-      }
-      const markup = createTemplates(res.hits).join('');
+  const res = await picApi.fetchPics();
+  try {
+    if (res.hits.length === 0) {
+      refs.btnEl.classList.add('visually-hidden');
+      throw "We're sorry, but you've reached the end of search results.";
+    }
+    const markup = createTemplates(res.hits).join('');
 
-      refs.galleryEl.insertAdjacentHTML('beforeend', markup);
+    refs.galleryEl.insertAdjacentHTML('beforeend', markup);
 
-      lightbox.refresh();
+    lightbox.refresh();
 
-      const { height: cardHeight } = document
-        .querySelector('.gallery')
-        .firstElementChild.getBoundingClientRect();
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
 
-      window.scrollBy({
-        top: cardHeight * 2,
-        behavior: 'smooth',
-      });
-    })
-    .catch(err => {
-      Notiflix.Notify.warning(err);
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
     });
+  } catch (err) {
+    Notiflix.Notify.warning(err);
+  }
 }
 
-function onFormElSubmit(e) {
+async function onFormElSubmit(e) {
   e.preventDefault();
   refs.btnEl.classList.add('visually-hidden');
 
@@ -54,20 +53,18 @@ function onFormElSubmit(e) {
   picApi.q = userValue;
   picApi.page = 1;
 
-  picApi
-    .fetchPics()
-    .then(res => {
-      if (res.hits.length === 0) {
-        throw 'Sorry, there are no images matching your search query. Please try again.';
-      }
-      Notiflix.Notify.success(`Hooray! We found ${res.totalHits} images.`);
-      renderPics(res.hits);
-      lightbox = new SimpleLightbox('.gallery a');
-      refs.btnEl.classList.remove('visually-hidden');
-    })
-    .catch(err => {
-      Notiflix.Notify.failure(err);
-    });
+  const res = await picApi.fetchPics();
+  try {
+    if (res.hits.length === 0) {
+      throw 'Sorry, there are no images matching your search query. Please try again.';
+    }
+    Notiflix.Notify.success(`Hooray! We found ${res.totalHits} images.`);
+    renderPics(res.hits);
+    lightbox = new SimpleLightbox('.gallery a');
+    refs.btnEl.classList.remove('visually-hidden');
+  } catch (err) {
+    Notiflix.Notify.failure(err);
+  }
 }
 
 function createTemplates(pics) {
